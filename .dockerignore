@@ -1,0 +1,7 @@
+ai-rules/
+.agents/
+artifacts/
+prototype/
+skills-lock.json
+.git/
+*.md
