@@ -1,0 +1,6 @@
+# Деливери — только mysun/. Остальное не нужно для деплоя.
+ai-rules/
+.agents/
+artifacts/
+prototype/
+skills-lock.json

@@ -1,0 +1,17 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/mysun/index.html" },
+    { "source": "/ready", "destination": "/mysun/ready.html" },
+    { "source": "/index.html", "destination": "/mysun/index.html" },
+    { "source": "/ready.html", "destination": "/mysun/ready.html" },
+    { "source": "/motion.css", "destination": "/mysun/motion.css" },
+    { "source": "/motion.js", "destination": "/mysun/motion.js" },
+    { "source": "/orb.js", "destination": "/mysun/orb.js" },
+    { "source": "/settings.js", "destination": "/mysun/settings.js" },
+    { "source": "/ready-motion.css", "destination": "/mysun/ready-motion.css" },
+    { "source": "/ready-motion.js", "destination": "/mysun/ready-motion.js" },
+    { "source": "/assets/:path*", "destination": "/mysun/assets/:path*" },
+    { "source": "/fonts/:path*", "destination": "/mysun/fonts/:path*" },
+    { "source": "/vendor/:path*", "destination": "/mysun/vendor/:path*" }
+  ]
+}
