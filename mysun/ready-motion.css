@@ -1,0 +1,73 @@
+.ready-enhanced .orb-box,
+.ready-enhanced .eyebrow,
+.ready-enhanced .h1,
+.ready-enhanced .sub,
+.ready-enhanced .btn {
+  opacity: 0;
+}
+
+.ready-word {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+}
+
+.orb-box .metal-orb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.orb-box.is-user-rotating .metal-orb {
+  cursor: grabbing;
+}
+
+.metal-orb.is-pointer-focused:focus-visible {
+  outline-color: transparent;
+}
+
+.orb-box.orb-fallback::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(70% 58% at 68% 74%, #fff, transparent 40%),
+    radial-gradient(circle at 38% 30%, #ff8b18, #5a2103 78%);
+}
+
+.btn {
+  appearance: none;
+  border-color: rgba(255, 255, 255, .1);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 150ms cubic-bezier(.22, 1, .36, 1),
+    background 250ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.btn:active {
+  transform: scale(.96);
+}
+
+.screen {
+  will-change: transform, opacity, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ready-enhanced .orb-box,
+  .ready-enhanced .eyebrow,
+  .ready-enhanced .h1,
+  .ready-enhanced .sub,
+  .ready-enhanced .btn {
+    opacity: 1;
+  }
+
+  .btn {
+    transition: none;
+  }
+}

@@ -1,0 +1,1439 @@
+:root {
+  --motion-ease: cubic-bezier(.2, 0, 0, 1);
+  --motion-fast: 150ms;
+  --motion-medium: 300ms;
+  --scroll-length: 3496px;
+  --glass-progress: 1;
+  --light-progress: 1;
+  --bb-rgb: 255 225 166;
+  --slider-x: 144.8px;
+}
+
+.frame {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background: #000;
+}
+
+.frame::-webkit-scrollbar {
+  display: none;
+}
+
+.frame.settings-open {
+  overflow: hidden;
+}
+
+.scroll-track {
+  position: relative;
+  height: var(--scroll-length);
+}
+
+.scene {
+  position: sticky;
+  inset-block-start: 0;
+  width: 100%;
+  height: 874px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #000;
+}
+
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("./assets/figma-bg-stars.svg") center / 100% 100% no-repeat;
+}
+
+.scene::after {
+  content: none;
+}
+
+/* --- Living light rays (behind the orb; colour follows the chosen star) --- */
+.rays {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  --ray-rgb: 255 190 130;
+  transition: opacity var(--motion-medium) var(--motion-ease);
+}
+
+@property --ray-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.rays::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Few, large beams — ~3 wide light shafts across the visible quadrant */
+  background: repeating-conic-gradient(
+    from var(--ray-angle) at 100% 0%,
+    rgb(var(--ray-rgb) / 0) 0deg,
+    rgb(var(--ray-rgb) / .09) 11deg,
+    rgb(var(--ray-rgb) / .09) 22deg,
+    rgb(var(--ray-rgb) / 0) 33deg
+  );
+  /* Long reach — beams stay visible right down to the bottom-left corner */
+  -webkit-mask-image: radial-gradient(150% 150% at 100% 0%, #000 6%, rgb(0 0 0 / .78) 42%, rgb(0 0 0 / .45) 82%, transparent 122%);
+  mask-image: radial-gradient(150% 150% at 100% 0%, #000 6%, rgb(0 0 0 / .78) 42%, rgb(0 0 0 / .45) 82%, transparent 122%);
+  filter: blur(10px);
+  /* Drift the beam angle (not the element) — corner stays anchored, no gaps */
+  animation:
+    rays-drift 44s ease-in-out infinite alternate,
+    rays-breathe 13s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes rays-drift {
+  from { --ray-angle: -5deg; }
+  to { --ray-angle: 6deg; }
+}
+
+@keyframes rays-breathe {
+  0%, 100% { opacity: .42; }
+  50% { opacity: .7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rays::before { animation: none; }
+}
+
+.frame::before {
+  content: none;
+}
+
+.page {
+  /* Графитовая студийная подложка — чёрный фрейм телефона читается силуэтом */
+  background: radial-gradient(130% 100% at 50% 22%, #202024 0%, #141416 52%, #0b0b0c 100%);
+}
+
+.statusbar,
+.home {
+  display: none;
+}
+
+.intro-bloom {
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0);
+  filter: blur(12px);
+  will-change: transform, opacity, filter;
+}
+
+.intro-bloom::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 173, 92, .42),
+    rgba(240, 94, 20, .15) 44%,
+    rgba(112, 36, 10, 0) 75%
+  );
+  animation: intro-breathe 7s ease-in-out infinite;
+}
+
+.scroll-hint {
+  position: absolute;
+  z-index: 7;
+  inset-inline-start: 50%;
+  inset-block-end: 58px;
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border: 0;
+  color: rgba(255, 255, 255, .64);
+  background: transparent;
+  font: 400 12px/1 var(--sans);
+  cursor: pointer;
+  transform: translate3d(-50%, 0, 0);
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.scroll-hint::after {
+  content: "↓";
+  font-size: 20px;
+}
+
+.scroll-hint:hover {
+  color: #fff;
+}
+
+.scroll-hint:active {
+  transform: translate3d(-50%, 0, 0) scale(.96);
+}
+
+.scroll-hint:focus-visible,
+.tab:focus-visible,
+.gbtn:focus-visible,
+.order:focus-visible,
+.title:focus-visible,
+.temp-input:focus-visible,
+.metal-orb:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .9);
+  outline-offset: 3px;
+}
+
+.gbtn,
+.tab {
+  position: relative;
+}
+
+.gbtn svg {
+  display: none;
+}
+
+.gbtn-icon {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  width: 20px;
+  height: 20px;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+.gbtn-icon-back {
+  width: 12px;
+  height: 17px;
+  transform: translate3d(-50%, -50%, 0) rotate(90deg);
+}
+
+.gbtn::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 2;
+}
+
+.tab::after {
+  content: "";
+  position: absolute;
+  inset-block: -6px;
+  inset-inline: 0;
+}
+
+.wordmark {
+  position: relative;
+  display: inline-block;
+  transform-origin: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.wordmark-text {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+}
+
+.sun-stage {
+  will-change: transform, opacity, filter;
+}
+
+.sun {
+  overflow: visible;
+  background: none;
+  box-shadow: none;
+  will-change: transform, opacity, filter;
+}
+
+.sun::after {
+  content: none;
+}
+
+.metal-orb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: var(--light-progress);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  will-change: opacity;
+}
+
+.sun.is-user-rotating .metal-orb {
+  cursor: grabbing;
+}
+
+.metal-orb.is-pointer-focused:focus-visible {
+  outline-color: transparent;
+}
+
+.sun-halo {
+  display: none;
+}
+
+.orb-fallback::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(80% 70% at 68% 76%, #fff, transparent 36%),
+    radial-gradient(circle at 38% 30%, rgb(var(--bb-rgb)), #5a2103 78%);
+}
+
+.refraction {
+  display: none;
+}
+
+.title {
+  border: 0;
+  background: transparent;
+  cursor: text;
+  font-weight: 400;
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.title [data-title-word] {
+  display: inline-block;
+  font-weight: 400;
+  will-change: transform, opacity, filter;
+}
+
+.tab-label,
+[data-ui-label] {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+}
+
+/* Подпись состояния. Появление — посимвольное, из скилла serega-emotional.
+   Уход скилл не описывает («Exit: none»), он добавлен по прямой просьбе:
+   мягче и короче входа, как требует make-interfaces-feel-better. */
+.subtitle-line {
+  display: inline-block;
+  transition:
+    opacity 150ms var(--motion-ease),
+    transform 150ms var(--motion-ease),
+    filter 150ms var(--motion-ease);
+}
+
+.subtitle-line.is-hidden {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+  filter: blur(4px);
+}
+
+.title:active {
+  transform: scale(.96);
+}
+
+.title-editor {
+  display: none;
+  width: 100%;
+  height: 48px;
+  border: 0;
+  outline: 0;
+  border-radius: 12px;
+  padding-inline: 12px;
+  color: #fff;
+  /* без стеклянной подложки — только текст и мигающая каретка */
+  background: transparent;
+  caret-color: #fff;
+  font: italic 48px/48px var(--serif);
+  letter-spacing: -1.08px;
+  text-align: center;
+  text-transform: none;
+}
+
+.title-editor:focus {
+  outline: 0;
+}
+
+/* только каретка, без подсветки выделения (просьба пользователя) */
+.title-editor::selection {
+  background: transparent;
+}
+
+.title-editor.is-editing {
+  display: block;
+}
+
+.desc.is-editing .title {
+  display: none;
+}
+
+.temp-input {
+  position: absolute;
+  inset: 50% 0 auto;
+  z-index: 4;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  cursor: ew-resize;
+  opacity: .001;
+  transform: translateY(-50%);
+}
+
+/* Место сверху под пилюлю со значением */
+.sliderwrap {
+  padding-block-start: 26px;
+}
+
+/* --- Шкала нагрева: линейка из штрихов (реф artifacts/slider.mp4) ---
+   Штрихи идут от края до края, значение — в пилюле над риской,
+   подписи «Тлеет / Пылает» вынесены ниже линейки. */
+.slider {
+  position: relative;
+  display: block;
+  height: 44px; /* touch target ≥ 44px; сами штрихи ниже и отцентрованы */
+  touch-action: none;
+}
+
+/* Неактивные штрихи */
+.slider::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  height: 18px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, .22) 0 1.5px,
+    transparent 1.5px 9px
+  );
+}
+
+/* Пройденная часть — в цвете выбранной звезды, разгорается к риске */
+.slider::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 50%;
+  width: var(--slider-fill, 50%);
+  height: 18px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(var(--accent-rgb, var(--bb-rgb))) 0 1.5px,
+    transparent 1.5px 9px
+  );
+  -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / .22), #000 72%);
+  mask-image: linear-gradient(90deg, rgb(0 0 0 / .22), #000 72%);
+}
+
+/* Риска */
+.handle {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: 0;
+  inset-block-start: 50%;
+  width: 3px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgb(var(--accent-rgb, var(--bb-rgb)));
+  box-shadow: 0 0 14px rgb(var(--accent-rgb, var(--bb-rgb)) / .85);
+  transform: translate3d(var(--slider-x), -50%, 0);
+  will-change: transform;
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    height var(--motion-fast) var(--motion-ease);
+}
+
+/* Диаметр — то, что человек реально заказывает: пилюля над риской */
+.size-readout {
+  position: absolute;
+  z-index: 4;
+  inset-block-end: calc(100% - 4px);
+  inset-inline-start: 0;
+  pointer-events: none;
+  transform: translate3d(var(--readout-x, 0), 0, 0);
+  will-change: transform;
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+/* Пилюля появляется только на взаимодействии: opacity + scale + blur */
+.size-readout-in {
+  display: block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgb(var(--accent-rgb, var(--bb-rgb)));
+  color: #1b1206;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.2px;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transform: translate3d(0, 5px, 0) scale(.86);
+  filter: blur(4px);
+  will-change: transform, opacity, filter;
+  /* уход короче входа */
+  transition:
+    opacity 150ms var(--motion-ease),
+    transform 150ms var(--motion-ease),
+    filter 150ms var(--motion-ease);
+}
+
+.slider.is-active .size-readout-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+  /* Появление с отскоком — по прямой просьбе пользователя.
+     Скилл по умолчанию требует bounce 0, поэтому отскок только на входе;
+     уход остаётся мягким и коротким, как предписывает правило exit. */
+  transition:
+    opacity 220ms var(--motion-ease),
+    transform 340ms cubic-bezier(.34, 1.56, .64, 1),
+    filter 220ms var(--motion-ease);
+}
+
+/* Тактильный отклик при перетаскивании */
+.slider.is-dragging .handle {
+  height: 32px;
+}
+
+.slider.is-dragging .handle,
+.slider.is-dragging .size-readout,
+.slider.is-keyboard-control .handle {
+  transition: none;
+}
+
+.tab,
+.gbtn,
+.order,
+.title {
+  touch-action: manipulation;
+}
+
+/* --- Слой интерактива (make-interfaces-feel-better) ---
+   Явные transition-property (никаких `all`), прерываемые переходы,
+   scale(.96) на нажатии — ровно .96, ниже .95 читается утрированно. */
+.tab,
+.gbtn,
+.order,
+.title,
+.settings-action,
+.rotation-reset {
+  transition-property: transform, opacity, filter, background-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(.2, 0, 0, 1);
+}
+
+/* Наведение — частая интеракция, поэтому только лёгкий сдвиг поверхности */
+.gbtn:hover,
+.order:hover,
+.settings-action:hover {
+  background-color: rgba(255, 255, 255, .16);
+}
+
+.tab:not(.active):hover {
+  color: rgba(255, 255, 255, .88);
+}
+
+.title:hover {
+  opacity: .88;
+}
+
+/* Нажатие — тактильный отклик: масштаб + прозрачность + микро-размытие */
+.gbtn:active,
+.order:active,
+.title:active,
+.settings-action:active,
+.rotation-reset:active {
+  transform: scale(.96);
+  opacity: .92;
+  filter: blur(.4px);
+}
+
+.tab:active {
+  transform: scale(.96);
+  opacity: .9;
+  filter: blur(.3px);
+}
+
+/* Движение не единственный канал: у каждого состояния есть статичный признак
+   (цвет текста у табов, фон у кнопок, пилюля у активного таба). */
+@media (prefers-reduced-motion: reduce) {
+  .tab:active,
+  .gbtn:active,
+  .order:active,
+  .title:active,
+  .settings-action:active,
+  .rotation-reset:active {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* --- Switcher (segmented control, X/Meta/Telegram-style) --- */
+/* Glass frame — 1:1 Figma: blur 5, bg/border rgba(255,255,255,.1) */
+.tabs {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Horizontal scroller — words react to mouse/finger; JS drives the edge fade */
+.tabs-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  cursor: grab;
+}
+
+.tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs-track.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 510;
+  letter-spacing: -.1px;
+  text-align: center;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, .58);
+  background: none;
+  cursor: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: color 150ms ease-out;
+}
+
+.tab[aria-selected="true"],
+.tab.active {
+  background: none;
+  color: #111;
+  padding: 8px;
+}
+
+/* Sliding indicator — animates between tabs (interruptible transition) */
+.tab-pill {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 0;
+  background: #fff;
+  border-radius: 999px;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, width;
+}
+
+.tabs-track.is-ready .tab-pill {
+  transition:
+    transform 320ms cubic-bezier(.2, 0, 0, 1),
+    width 320ms cubic-bezier(.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs-track.is-ready .tab-pill {
+    transition: none;
+  }
+}
+
+.order {
+  font-weight: 500;
+}
+
+.subtitle,
+.labels {
+  font-weight: 400;
+}
+
+.statusbar {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab[aria-disabled="true"] {
+  cursor: default;
+}
+
+.order-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--motion-ease);
+}
+
+.is-ordering .order-transition {
+  opacity: 1;
+}
+
+.settings-panel {
+  position: absolute;
+  inset: auto 12px 18px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  height: 348px;
+  max-height: calc(100% - 36px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 24px;
+  color: #fff;
+  background: rgba(18, 18, 18, .88);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, .48),
+    inset 0 1px rgba(255, 255, 255, .08);
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 8px, 0) scale(.98);
+  transform-origin: bottom right;
+  transition:
+    opacity 220ms var(--motion-ease),
+    transform 260ms var(--motion-ease);
+}
+
+.settings-panel[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+.settings-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 78px 1fr 78px;
+  align-items: center;
+  min-height: 54px;
+  padding: 5px 12px 0;
+  background: transparent;
+}
+
+.settings-header h2 {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.2px;
+  text-align: center;
+}
+
+.settings-action {
+  min-height: 40px;
+  border: 0;
+  color: #63e6ff;
+  background: transparent;
+  font: 510 15px/1 var(--sans);
+  cursor: pointer;
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.settings-action:first-child {
+  justify-self: start;
+}
+
+.settings-action:last-child {
+  justify-self: end;
+}
+
+.settings-action:active {
+  transform: scale(.96);
+}
+
+.settings-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 12px 16px;
+  scrollbar-width: none;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-picker-wrap {
+  display: none;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.settings-picker-wrap > span {
+  color: rgba(255, 255, 255, .56);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.settings-picker {
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font: 600 14px/1 var(--sans);
+  text-align: end;
+  cursor: pointer;
+}
+
+.settings-picker option {
+  color: #fff;
+  background: #1b1b1b;
+}
+
+.settings-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .13);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .07),
+    0 12px 32px rgba(0, 0, 0, .18);
+}
+
+.settings-group.has-selected-control {
+  display: flex;
+}
+
+.settings-group h3 {
+  margin-block-end: 4px;
+  color: rgba(255, 255, 255, .72);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+.settings-control {
+  display: grid;
+  gap: 8px;
+  padding-block: 12px;
+  border-block-end: 1px solid rgba(255, 255, 255, .1);
+}
+
+.settings-control:last-child {
+  padding-block-end: 4px;
+  border-block-end: 0;
+}
+
+.settings-control-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-control strong,
+.settings-color strong {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.2px;
+}
+
+.settings-control output {
+  min-width: 48px;
+  color: rgba(255, 255, 255, .82);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.settings-control input[type="range"] {
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.settings-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      #63e6ff 0 var(--settings-fill, 50%),
+      rgba(255, 255, 255, .28) var(--settings-fill, 50%) 100%
+    );
+}
+
+.settings-control input[type="range"]::-webkit-slider-thumb {
+  width: 26px;
+  height: 26px;
+  margin-block-start: -11px;
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .36);
+}
+
+.settings-control input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .28);
+}
+
+.settings-control input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: #63e6ff;
+}
+
+.settings-control input[type="range"]::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .36);
+}
+
+.settings-help {
+  color: rgba(255, 255, 255, .58);
+  font-size: 12px;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.rotation-reset {
+  min-height: 44px;
+  margin-block-start: 14px;
+  border: 1px solid rgba(99, 230, 255, .38);
+  border-radius: 14px;
+  color: #63e6ff;
+  background: rgba(99, 230, 255, .08);
+  font: 510 14px/1 var(--sans);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.rotation-reset:hover {
+  background: rgba(99, 230, 255, .14);
+}
+
+.rotation-reset:active {
+  transform: scale(.96);
+}
+
+.rotation-reset:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.settings-color {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .13);
+}
+
+.settings-color.is-selected {
+  display: flex;
+}
+
+.settings-color > span:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-color small {
+  color: rgba(255, 255, 255, .55);
+  font-size: 12px;
+}
+
+.color-wheel {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 255, 255, .72);
+  border-radius: 50%;
+  background: conic-gradient(
+    #ff2d55,
+    #ffcc00,
+    #34c759,
+    #32ade6,
+    #5856d6,
+    #af52de,
+    #ff2d55
+  );
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+}
+
+.color-wheel input {
+  position: absolute;
+  inset: 5px;
+  width: 30px;
+  height: 30px;
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--orb-picked-color, #ff8c1a);
+  cursor: pointer;
+  opacity: .001;
+}
+
+.settings-action:focus-visible,
+.settings-picker:focus-visible,
+.settings-control input:focus-visible,
+.color-wheel:has(input:focus-visible) {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.motion-reveal {
+  will-change: transform, opacity, filter;
+}
+
+.is-scrubbing .motion-reveal,
+.is-scrubbing .wordmark,
+.is-scrubbing .wordmark-case,
+.is-scrubbing .sun-stage,
+.is-scrubbing .intro-bloom,
+.is-scrubbing .scroll-hint {
+  transition: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes intro-breathe {
+  0%,
+  100% {
+    opacity: .72;
+    transform: scale(.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --scroll-length: 874px;
+  }
+
+  .intro-bloom::before {
+    animation: none;
+  }
+
+  .scroll-hint {
+    display: none;
+  }
+
+  .sun-halo,
+  .metal-orb {
+    animation: none;
+  }
+
+  .tab,
+  .gbtn,
+  .order,
+    .title,
+    .handle,
+    .wordmark-case,
+    .order-transition,
+    .settings-panel,
+    .settings-action {
+    transition: none;
+  }
+}
+
+/* --- Claude QA-патч: чёрный фон + убрать iOS-хром (время/батарея/линия) --- */
+.scene { background: #000; }
+.scene::before { filter: none; }
+.statusbar, .home { display: none !important; }
+
+/* ==========================================================================
+   ЛОАДЕР (референс artifacts/loader.mp4) + баунс-появление интерфейса
+   Правила движения — по скиллу make-interfaces-feel-better:
+   split & stagger enter, opacity + blur(4→0) + scale, интерактив на CSS-transition.
+   ========================================================================== */
+
+:root {
+  --scroll-length: 5000px;                        /* «тугой» скролл */
+  --motion-bounce: cubic-bezier(.34, 1.32, .5, 1); /* лёгкий, но заметный баунс */
+}
+
+/* пока идёт лоадер — скролл заблокирован */
+.frame.is-loading { overflow: hidden; }
+
+/* На первом кадре интерфейс не должен «мигать»: у контролов есть
+   150мс transition на opacity, из-за него они успевали проявиться
+   до того, как скролл-прогресс выставит им 0. */
+.is-loading .gbtn,
+.is-loading .tabs,
+.is-loading .desc,
+.is-loading .sliderwrap,
+.is-loading .order {
+  opacity: 0;
+  transition: none;
+}
+
+/* --- 1. Вспышки градиентов -------------------------------------------------- */
+
+.loader {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  filter: blur(34px) saturate(1.12);
+}
+
+.loader .flash {
+  position: absolute;
+  inset: -14%;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* Вспышки играют только при переходе к интерфейсу (по клику).
+   На загрузке страницы градиента нет. */
+.is-gradient .loader .flash {
+  animation: loader-flash 1100ms cubic-bezier(.45, 0, .55, 1) both;
+}
+
+@keyframes loader-flash {
+  0%   { opacity: 0;   transform: scale(1.12); }
+  32%  { opacity: .88; }
+  64%  { opacity: .8; }
+  100% { opacity: 0;   transform: scale(1); }
+}
+
+/* Чёрный экран на старте, затем вспышки с шагом 150мс.
+   Специфичность должна совпадать с правилом-шорткатом выше, иначе он
+   обнуляет animation-delay. */
+.is-gradient .loader .flash-1 { animation-delay: 200ms; }
+.is-gradient .loader .flash-2 { animation-delay: 420ms; }
+.is-gradient .loader .flash-3 { animation-delay: 640ms; }
+.is-gradient .loader .flash-4 { animation-delay: 860ms; }
+.is-gradient .loader .flash-5 { animation-delay: 1080ms; }
+.is-gradient .loader .flash-6 { animation-delay: 1300ms; }
+
+/* Гамма — температурный проход по нашим звёздам: от холодной красной
+   Бетельгейзе к горячему сине-белому Ригелю. Соседние вспышки близки по
+   тону, поэтому наложения смешиваются чисто, без лиловой мути. */
+
+/* Бетельгейзе ~3500K — глубокий красно-оранжевый */
+.flash-1 {
+  background:
+    radial-gradient(135% 92% at 50% 108%, rgba(255, 106, 42, .98), rgba(214, 48, 16, .82) 40%, rgba(120, 22, 8, .45) 70%, transparent 92%),
+    radial-gradient(95% 46% at 50% 0%, rgba(190, 46, 20, .5), transparent 74%);
+}
+/* Арктур ~4300K — янтарно-оранжевый */
+.flash-2 {
+  background:
+    radial-gradient(138% 96% at 50% 106%, rgba(255, 168, 74, 1), rgba(248, 116, 26, .84) 40%, rgba(150, 58, 12, .45) 72%, transparent 94%),
+    radial-gradient(95% 48% at 50% 0%, rgba(226, 108, 30, .48), transparent 74%);
+}
+/* Капелла ~5000K — золото */
+.flash-3 {
+  background:
+    radial-gradient(140% 98% at 50% 104%, rgba(255, 226, 150, 1), rgba(255, 178, 66, .88) 40%, rgba(184, 96, 24, .46) 72%, transparent 94%),
+    radial-gradient(98% 50% at 50% 0%, rgba(255, 190, 96, .5), transparent 76%);
+}
+/* Солнце ~5800K — тёпло-белая, самая яркая вспышка */
+.flash-4 {
+  background:
+    radial-gradient(145% 105% at 50% 100%, rgba(255, 250, 238, 1), rgba(255, 226, 170, .92) 38%, rgba(228, 158, 74, .5) 70%, transparent 96%),
+    radial-gradient(105% 58% at 50% 0%, rgba(255, 236, 198, .58), transparent 78%);
+}
+/* Ригель ~12100K — сине-белая */
+.flash-5 {
+  background:
+    radial-gradient(142% 100% at 50% 102%, rgba(240, 248, 255, 1), rgba(150, 196, 255, .9) 38%, rgba(64, 112, 226, .52) 70%, transparent 95%),
+    radial-gradient(100% 54% at 50% 0%, rgba(176, 210, 255, .54), transparent 76%);
+}
+/* Затухание в ночную синь */
+.flash-6 {
+  background:
+    radial-gradient(132% 88% at 50% 110%, rgba(86, 132, 240, .82), rgba(30, 52, 150, .55) 44%, transparent 86%),
+    radial-gradient(92% 44% at 50% 0%, rgba(44, 70, 170, .34), transparent 74%);
+}
+
+/* звёзды проявляются после вспышек */
+.scene::before { transition: opacity 700ms var(--motion-ease); }
+.is-loading .scene::before { opacity: 0; }
+
+/* --- 2. SUN DOSTAVKA + стрелка внизу (после вспышек) ------------------------ */
+
+/* Одноразовый staged-вход → keyframes (transition оставлен интерактиву).
+   Стагер: надпись, затем стрелка через 140мс. */
+.is-loading .wordmark,
+.is-loading .hint-inner { opacity: 0; }
+
+/* JS держит transform на .wordmark → здесь только opacity/blur */
+.is-loaded .wordmark { animation: loader-word 560ms var(--motion-ease) both; }
+
+/* баунс самой надписи — на внутреннем элементе, чтобы не конфликтовать с JS */
+.is-loaded .wordmark-text { animation: loader-word-bounce 640ms var(--motion-bounce) both; }
+
+.is-loaded .hint-inner { animation: loader-hint 560ms var(--motion-bounce) 140ms both; }
+
+@keyframes loader-word {
+  from { opacity: 0; filter: blur(6px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@keyframes loader-word-bounce {
+  from { transform: translate3d(0, 10px, 0) scale(.94); }
+  to   { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes loader-hint {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(.9); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.scroll-hint::after { content: none; }
+
+.hint-inner { display: grid; place-items: center; }
+.is-loading .scroll-hint { pointer-events: none; }
+
+/* Стрелка в контурном круге, без заливки фона; сам глиф меньше круга.
+   Кольцо живёт на .hint-inner, чтобы во время вспышек скрываться вместе
+   со стрелкой (на кнопке оно просвечивало сквозь градиенты). */
+.scroll-hint {
+  inset-block-end: 74px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, .78);
+}
+
+.hint-inner {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.scroll-hint:hover {
+  color: #fff;
+}
+
+.scroll-hint:hover .hint-inner {
+  border-color: rgba(255, 255, 255, .5);
+}
+
+.hint-arrow {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* --- 3. Иконки Gravity UI + вектор вордмарка 1:1 из Figma --------------- */
+
+/* Кнопка настроек — невидимая, но кликабельная зона. !important нужен,
+   т.к. вход элемента управляется инлайн-стилями из JS (setBounceState). */
+.gbtn-invisible {
+  opacity: 0 !important;
+}
+
+/* Занимает ровно место кнопки «назад» (40×40), без фона и рамки —
+   иначе topbar (space-between) теряет симметрию и вордмарк съезжает влево. */
+.back-spacer {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+/* базовое правило прячет любые svg в кнопке — возвращаем наши иконки */
+.gbtn svg.gicon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: #fff;
+}
+
+/* старые img-иконки убраны из разметки */
+.gbtn-icon { display: none; }
+
+/* Вордмарк — точный вектор из Figma (48:595), не живой текст */
+.wordmark { font-size: 0; line-height: 0; }
+
+.wordmark-vector {
+  display: block;
+  width: 150px;
+  height: auto;
+}
+
+/* --- 4. Скролла нет: анимация запускается кликом ------------------------ */
+
+.frame { overflow: hidden; }
+.scroll-track { height: 874px; }
+
+/* Фаза градиента изолирована: вуаль полностью закрывает сцену (лого, солнце,
+   звёзды, UI), вспышки играют поверх неё. Интерфейс начинает появляться
+   только когда градиент закончился. */
+.loader-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  /* уход — «растворение», вход — быстрый, чтобы сцена скрылась сразу */
+  transition: opacity 360ms var(--motion-ease);
+}
+
+.is-gradient .loader-veil {
+  opacity: 1;
+  transition-duration: 180ms;
+}
+
+/* --- 5. Появление интерфейса после растворения градиента ----------------
+   По make-interfaces-feel-better: не анимируем один контейнер — режем на
+   смысловые блоки и даём стагер ~100мс; вход = opacity + blur(4→0) +
+   короткий сдвиг; fill: backwards, чтобы после входа вернулись базовые
+   стили и снова работал :active { scale(.96) }. */
+
+@keyframes ui-enter {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); filter: blur(4px); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0);    filter: blur(0); }
+}
+
+/* у сферы transform занят инлайном из JS — ей только свет и резкость */
+@keyframes ui-enter-soft {
+  from { opacity: 0; filter: blur(6px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+.is-revealed .topbar,
+.is-revealed .tabs,
+.is-revealed .desc,
+.is-revealed .sliderwrap,
+.is-revealed .order {
+  animation: ui-enter 460ms cubic-bezier(.2, 0, 0, 1) backwards;
+  will-change: transform, opacity, filter;
+}
+
+.is-revealed .sun-stage {
+  animation: ui-enter-soft 560ms cubic-bezier(.2, 0, 0, 1) backwards;
+}
+
+/* стагер сверху вниз, кнопка заказа — последней */
+.is-revealed .topbar     { animation-delay: 60ms; }
+.is-revealed .tabs       { animation-delay: 160ms; }
+.is-revealed .sun-stage  { animation-delay: 240ms; }
+.is-revealed .desc       { animation-delay: 360ms; }
+.is-revealed .sliderwrap { animation-delay: 460ms; }
+.is-revealed .order      { animation-delay: 560ms; }
+.is-gradient .loader { z-index: 8; }
+
+.hint-arrow { display: block; }
+
+/* мягкое приглашение к скроллу */
+.is-loaded .hint-arrow { animation: hint-bob 2.4s ease-in-out 900ms infinite; }
+
+@keyframes hint-bob {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, 4px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --scroll-length: 874px; }
+  .loader { display: none; }
+  .is-loaded .wordmark,
+  .is-loaded .wordmark-text,
+  .is-loaded .hint-inner,
+  .is-loaded .hint-arrow,
+  .is-revealed .topbar,
+  .is-revealed .tabs,
+  .is-revealed .sun-stage,
+  .is-revealed .desc,
+  .is-revealed .sliderwrap,
+  .is-revealed .order { animation: none; }
+}
