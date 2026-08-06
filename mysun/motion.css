@@ -164,7 +164,7 @@
   color: rgba(255, 255, 255, .64);
   background: transparent;
   font: 400 12px/1 var(--sans);
-  cursor: pointer;
+  pointer-events: none;
   transform: translate3d(-50%, 0, 0);
   transition:
     color var(--motion-fast) var(--motion-ease),
@@ -1350,10 +1350,8 @@
   height: auto;
 }
 
-/* --- 4. Скролла нет: анимация запускается кликом ------------------------ */
-
-.frame { overflow: hidden; }
-.scroll-track { height: 874px; }
+/* --- 4. Клик — быстрая перемотка, скролл (base rule выше) — основной
+   драйвер метаморфозы. --scroll-length = 5000px задаёт «тугой» скролл. --- */
 
 /* Фаза градиента изолирована: вуаль полностью закрывает сцену (лого, солнце,
    звёзды, UI), вспышки играют поверх неё. Интерфейс начинает появляться

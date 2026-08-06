@@ -73,9 +73,6 @@
 
   let logoOffsetX = 0;
   let logoOffsetY = 0;
-  let timelineProgress = 0;
-  let revealPlaying = false;
-  let revealDone = false;
   let currentProgress = -1;
   let progressFrame = 0;
   let scrubFrame = 0;
@@ -288,7 +285,6 @@
 
     const hintVisibility = 1 - ease(range(p, 0.02, 0.15));
     scrollHint.style.opacity = hintVisibility.toFixed(4);
-    scrollHint.style.pointerEvents = hintVisibility > 0.2 ? "" : "none";
 
     revealSequence.forEach(({ elements, start, end, blur = 4 }) => {
       const revealProgress = range(p, start, end);
@@ -356,8 +352,13 @@
     });
   };
 
-  // Прогресс сцены больше не зависит от скролла — им управляет таймлайн.
-  const getScrollProgress = () => timelineProgress;
+  // Скролл — основной драйвер метаморфозы (по ТЗ: логотип по мере скролла
+  // превращается в элементы интерфейса). Клик по стрелке/фону — только
+  // быстрая перемотка поверх того же прогресса, см. revealViaShortcut.
+  const getScrollProgress = () => {
+    const maximum = frame.scrollHeight - frame.clientHeight;
+    return maximum <= 0 ? 1 : frame.scrollTop / maximum;
+  };
 
   const requestProgressUpdate = () => {
     if (progressFrame) {
@@ -752,52 +753,10 @@
     titleButton.focus({ preventScroll: true });
   };
 
-  // --- Запуск сцены: клик по стрелке или по любому пустому месту экрана.
-  // Скролл сцену не двигает.
-  const playReveal = () => {
-    if (revealPlaying || revealDone) {
-      return;
-    }
-
-    revealPlaying = true;
-
-    if (reducedMotion.matches) {
-      timelineProgress = 1;
-      updateScene(1, true);
-      revealPlaying = false;
-      revealDone = true;
-      return;
-    }
-
-    // Фаза 1 — только градиент. Вуаль закрывает сцену целиком, поэтому
-    // ни лого, ни солнце сквозь вспышки не видны.
-    frame.classList.add("is-gradient");
-
-    // Фаза 2 — интерфейс собирается ещё под вуалью и открывается целиком,
-    // когда градиент растворяется. Поэтапного выезда нет.
-    window.setTimeout(() => {
-      // сначала итоговое состояние (updateScene снимает inline-стили),
-      // затем класс входа — блоки проявляются стагером, не рывком
-      timelineProgress = 1;
-      updateScene(1, true);
-      frame.classList.add("is-revealed");
-      frame.classList.remove("is-gradient");
-      revealPlaying = false;
-      revealDone = true;
-    }, GRADIENT_MS);
-  };
-
-  scrollHint.addEventListener("click", playReveal);
-
-  scene.addEventListener("click", (event) => {
-    if (revealPlaying || revealDone) {
-      return;
-    }
-    if (event.target.closest("button, input, a, canvas, .settings-panel")) {
-      return;
-    }
-    playReveal();
-  });
+  // Клика больше нет: единственный драйвер метаморфозы — скролл (по ТЗ).
+  // Вспышки градиента теперь играют один раз в лоадере при заходе на
+  // страницу, см. finishLoader ниже, а не по действию пользователя.
+  frame.addEventListener("scroll", requestProgressUpdate, { passive: true });
 
   // --- Switcher control: sliding pill + drag-scroll + overflow fade ---
   function positionPill() {
@@ -1148,9 +1107,10 @@
     }),
     selectPreset,
     setProgress: (progress) => {
-      timelineProgress = clamp(progress);
-      revealDone = timelineProgress > 0;
-      updateScene(timelineProgress, true);
+      const maximum = frame.scrollHeight - frame.clientHeight;
+      const target = clamp(progress);
+      frame.scrollTop = maximum * target;
+      updateScene(target, true);
     },
     setEnergy: (energy) => applyEnergy(energy),
   };
@@ -1171,18 +1131,30 @@
     window.mysunPrototype.setProgress(requestedProgress);
   }
 
-  // --- Лоадер: чёрный экран → вспышки градиентов → надпись и стрелка ---
-  // Класс is-loading стоит в разметке, поэтому первый кадр уже чёрный.
+  // --- Лоадер: чёрный экран → вспышки градиентов (один раз) → надпись и
+  // стрелка. Класс is-loading стоит в разметке, поэтому первый кадр уже
+  // чёрный. Дальше — только скролл, никакого повторного клика/градиента.
   const finishLoader = () => {
     if (!frame.classList.contains("is-loading")) {
       return;
     }
     frame.classList.remove("is-loading");
-    frame.classList.add("is-loaded");
+
+    if (reducedMotion.matches) {
+      frame.classList.add("is-loaded");
+      return;
+    }
+
+    frame.classList.add("is-gradient");
+    window.setTimeout(() => {
+      frame.classList.remove("is-gradient");
+      frame.classList.add("is-loaded");
+    }, GRADIENT_MS);
   };
 
-  if (reducedMotion.matches || requestedProgressParam !== null) {
-    finishLoader();
+  if (requestedProgressParam !== null) {
+    frame.classList.remove("is-loading");
+    frame.classList.add("is-loaded");
   } else {
     window.setTimeout(finishLoader, LOADER_MS);
   }
