@@ -84,7 +84,7 @@
   let initialSliderVisual = true;
   let currentTemperature = 5800;
   let currentEnergy = 0.5;
-  let currentDiameter = 30;
+  let currentDiameter = 1; // радиус Солнца — стартовый пресет
   let currentPreset = "sun";
   let sliderPointerId = null;
   let keyboardIdleTimer = 0;
@@ -431,10 +431,10 @@
   };
 
   // Нагрев — единственная ось персонализации после выбора звезды.
-  // Один слайдер ведёт сразу размер, светимость и активность магмы: у каждой
-  // звезды свой диапазон (calm → blaze), поэтому она остаётся собой.
-  const MIN_DIAMETER = 12;
-  const MAX_DIAMETER = 48;
+  // Слайдер ведёт светимость и активность магмы (calm → blaze, свой диапазон
+  // у каждой звезды). Физический радиус звезды от него не зависит — это её
+  // собственное свойство (STAR_PRESETS[x].radiusSolar), реальная величина в
+  // солнечных радиусах, стандартная единица измерения размера звёзд.
 
   // --- Подпись состояния: посимвольное появление через skill serega-emotional.
   // Пока крутим ползунок — она уходит; как только отпустили, приходит фраза,
@@ -503,18 +503,16 @@
       });
     }
 
-    currentDiameter = Math.round(
-      lerp(MIN_DIAMETER, MAX_DIAMETER, energy),
-    );
+    currentDiameter = presetConfig?.radiusSolar ?? currentDiameter;
     if (sizeReadoutIn) {
-      sizeReadoutIn.textContent = `${currentDiameter} см`;
+      sizeReadoutIn.textContent = `${currentDiameter} R☉`;
     }
 
     const percent = Math.round(energy * 100);
     temperatureInput.value = String(percent);
     temperatureInput.setAttribute(
       "aria-valuetext",
-      `Нагрев ${percent}%, диаметр ${currentDiameter} сантиметров`,
+      `Нагрев ${percent}%. Радиус звезды — ${currentDiameter} солнечных радиусов`,
     );
     sun.dataset.energy = String(percent);
 
@@ -563,6 +561,8 @@
     // G2V, ~5800K — золотое солнце: живой поток, тёплый белый центр
     sun: {
       temperature: 5800,
+      // Реальный радиус звезды в солнечных радиусах (R☉) — 1 R☉ = радиус Солнца.
+      radiusSolar: 1,
       // Нагрев: размер + светимость + активность магмы
       energy: {
         calm:  { radius: 0.52, exposure: 1.15, glowGain: 0.38, bloomStrength: 0.45,
@@ -586,6 +586,8 @@
     // K1.5 III оранжевый гигант, ~4300K — крупный, медный, спокойный
     arcturus: {
       temperature: 4300,
+      // Реальный радиус звезды в солнечных радиусах (R☉) — 1 R☉ = радиус Солнца.
+      radiusSolar: 25,
       energy: {
         calm:  { radius: 0.56, exposure: 1.10, glowGain: 0.45, bloomStrength: 0.50,
                  flowSpeed: 0.20, warp: 0.35, contrast: 0.80, lift: 0.16, rimGain: 0.46 },
@@ -608,6 +610,8 @@
     // G-гиганты, ~5000K — яркая золотисто-кремовая, энергичная
     capella: {
       temperature: 5000,
+      // Реальный радиус звезды в солнечных радиусах (R☉) — 1 R☉ = радиус Солнца.
+      radiusSolar: 12,
       energy: {
         calm:  { radius: 0.50, exposure: 1.20, glowGain: 0.40, bloomStrength: 0.48,
                  flowSpeed: 0.45, warp: 0.28, contrast: 0.90, lift: 0.16, rimGain: 0.55 },
@@ -630,6 +634,8 @@
     // M2 Iab красный сверхгигант, ~3500K — огромный, медленный, бурный
     betelgeuse: {
       temperature: 3500,
+      // Реальный радиус звезды в солнечных радиусах (R☉) — 1 R☉ = радиус Солнца.
+      radiusSolar: 700,
       energy: {
         calm:  { radius: 0.58, exposure: 1.00, glowGain: 0.50, bloomStrength: 0.55,
                  flowSpeed: 0.12, warp: 0.50, contrast: 0.95, lift: 0.06, rimGain: 0.40 },
@@ -652,6 +658,8 @@
     // B8 Ia голубой сверхгигант, ~12000K — горячий, стремительный, слепящий
     rigel: {
       temperature: 12000,
+      // Реальный радиус звезды в солнечных радиусах (R☉) — 1 R☉ = радиус Солнца.
+      radiusSolar: 79,
       energy: {
         calm:  { radius: 0.48, exposure: 1.30, glowGain: 0.45, bloomStrength: 0.55,
                  flowSpeed: 0.60, warp: 0.25, contrast: 0.85, lift: 0.20, rimGain: 0.62 },

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" style="background:#000">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,7 +19,10 @@
   .page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(130% 100% at 50% 22%, #202024 0%, #141416 52%, #0b0b0c 100%);padding:24px;-webkit-font-smoothing:antialiased}
   .frame{position:relative;width:402px;height:874px;flex:0 0 auto;border-radius:54px;overflow:hidden;
     background:#000;color:#fff;font-family:var(--sans);
-    box-shadow:0 40px 120px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);isolation:isolate}
+    box-shadow:0 40px 120px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);isolation:isolate;
+    animation:frame-fade-in 480ms ease both}
+  @keyframes frame-fade-in{from{opacity:0}to{opacity:1}}
+  @media(prefers-reduced-motion:reduce){.frame{animation:none}}
   .frame::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
     background:url("./assets/figma-bg-stars.svg") center / 100% 100% no-repeat}
 
